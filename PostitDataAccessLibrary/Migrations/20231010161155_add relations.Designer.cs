@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PostitDataAccessLibrary.DataAccess;
@@ -11,9 +12,11 @@ using PostitDataAccessLibrary.DataAccess;
 namespace PostitDataAccessLibrary.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class UserContextModelSnapshot : ModelSnapshot
+    [Migration("20231010161155_add relations")]
+    partial class addrelations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,12 +51,9 @@ namespace PostitDataAccessLibrary.Migrations
                     b.Property<DateTime?>("UpdatedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("CreatedById");
 
                     b.ToTable("Note");
                 });
@@ -97,9 +97,13 @@ namespace PostitDataAccessLibrary.Migrations
 
             modelBuilder.Entity("PostitDataAccessLibrary.Models.Note", b =>
                 {
-                    b.HasOne("PostitDataAccessLibrary.Models.User", null)
+                    b.HasOne("PostitDataAccessLibrary.Models.User", "CreatedBy")
                         .WithMany("Notes")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("PostitDataAccessLibrary.Models.User", b =>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PostitDataAccessLibrary.DataAccess;
@@ -11,9 +12,11 @@ using PostitDataAccessLibrary.DataAccess;
 namespace PostitDataAccessLibrary.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class UserContextModelSnapshot : ModelSnapshot
+    [Migration("20231007131951_update-migration")]
+    partial class updatemigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,9 +29,6 @@ namespace PostitDataAccessLibrary.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedOn")
@@ -48,12 +48,7 @@ namespace PostitDataAccessLibrary.Migrations
                     b.Property<DateTime?>("UpdatedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Note");
                 });
@@ -93,18 +88,6 @@ namespace PostitDataAccessLibrary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
-                });
-
-            modelBuilder.Entity("PostitDataAccessLibrary.Models.Note", b =>
-                {
-                    b.HasOne("PostitDataAccessLibrary.Models.User", null)
-                        .WithMany("Notes")
-                        .HasForeignKey("UserId");
-                });
-
-            modelBuilder.Entity("PostitDataAccessLibrary.Models.User", b =>
-                {
-                    b.Navigation("Notes");
                 });
 #pragma warning restore 612, 618
         }

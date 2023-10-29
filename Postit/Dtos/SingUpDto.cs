@@ -1,6 +1,6 @@
 ﻿namespace Postit.Dtos
 {
-    public class UserDto
+    public class SingUpDto
     {
         public string Name { get; set; }
         public string Email { get; set; }

@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Postit.Dtos;
 using PostitDataAccessLibrary.DataAccess;
 using PostitDataAccessLibrary.Models;
+using QRCoder;
+using System.Drawing.Printing;
+using static QRCoder.PayloadGenerator;
 
 namespace Postit.Controllers
 {
@@ -10,16 +13,20 @@ namespace Postit.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserContext _context;
-        public UserController(UserContext context) 
+        private readonly DataContext _userContext;
+        private readonly DataContext _noteContext;
+        public UserController(DataContext UserContext, DataContext NoteContext) 
         {
-            this._context = context;
+            this._userContext = UserContext;
+            this._noteContext = NoteContext;
         }
+        
 
         [HttpGet]
         public IEnumerable<UserResponseDto> Get()
         {
-            var users = _context.User.Where(u => u.DeletedOn == null);
+            
+            var users = _userContext.User.Where(u => u.DeletedOn == null);
 
             IList<UserResponseDto> result = new List<UserResponseDto>();
 
@@ -34,11 +41,11 @@ namespace Postit.Controllers
             return result;
         }
         [HttpPost("sign-up")]
-        public void SignUp([FromBody] UserDto request) 
+        public void SignUp([FromBody] SingUpDto request) 
         {
             try
             {
-                var exist = _context.User.FirstOrDefault(u => u.Email == request.Email);
+                var exist = _userContext.User.FirstOrDefault(u => u.Email == request.Email);
 
                 if (exist != null)
                     throw new Exception($"{request.Email} zaten kayıtlıdır.");
@@ -51,9 +58,9 @@ namespace Postit.Controllers
                 user.Birthday = request.Birthday;
                 user.CreatedOn = DateTime.UtcNow;
 
-                _context.User.Add(user);
-                
-                _context.SaveChanges();
+                _userContext.User.Add(user);
+
+                _userContext.SaveChanges();
             }
             catch (Exception)
             {
@@ -65,7 +72,7 @@ namespace Postit.Controllers
         {
             try
             {
-                var result = _context.User.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+                var result = _userContext.User.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
 
                 if (result == null)
                     return false;
@@ -88,16 +95,70 @@ namespace Postit.Controllers
         [HttpPut("{id}/profile")]
         public bool updateProfile(Guid id, [FromBody] UserProfileUpdateDto request)
         {
-            var user = _context.User.FirstOrDefault(u => u.Id == id);
+            var user = _userContext.User.FirstOrDefault(u => u.Id == id);
 
             if (user == null) return false;
 
             user.Name = request.Name;
 
-            _context.SaveChanges();
+            _userContext.SaveChanges();
 
             return true;
 
+        }
+
+        [HttpPost("notes/add-note")]
+        public bool AddNote([FromBody] NoteAddDto request, string email)
+        {
+            var user = _userContext.User.FirstOrDefault(u => u.Email == email);
+
+            Note note = new Note();
+
+            note.Name = request.Name;
+            note.Description = request.Description;
+            note.CreatedOn = DateTime.UtcNow;
+            note.Id = Guid.NewGuid();
+            note.CreatedById = user.Id;
+
+            try
+            {
+                if (request == null)
+                    return false;
+                else
+                {
+                    
+                    _noteContext.Note.Add(note);
+                    _noteContext.SaveChanges();
+                }
+                
+                return true;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        [HttpGet("notes/get-notes")]
+        public IEnumerable<Note> GetNote(string email)
+        {   
+            var user = _userContext.User.FirstOrDefault(u => u.Email == email);
+            return _noteContext.Note.Where(u => u.CreatedById == user.Id ); 
+        }
+        [HttpPost("qrCode")]
+        public string qrGenerator(string email)
+        {
+            var user = _userContext.User.FirstOrDefault(u => u.Email == email);
+            
+
+            Url generator = new Url($"https://postit.com/{email}");
+            string payload = generator.ToString();
+
+            QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
+            AsciiQRCode qrCode = new AsciiQRCode(qrCodeData);
+            string qrCodeAsAsciiArt = qrCode.GetGraphic(1);
+
+            return qrCodeAsAsciiArt;
         }
     }
 }

@@ -10,10 +10,11 @@ using System.Threading.Tasks;
 
 namespace PostitDataAccessLibrary.DataAccess
 {
-    public class UserContext : DbContext
+    public class DataContext : DbContext
     {
         public DbSet<User> User { get; set; }
-        public UserContext(DbContextOptions options) : base(options)
+        public DbSet<Note> Note { get; set; }
+        public DataContext(DbContextOptions options) : base(options)
         {
 
         }

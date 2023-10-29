@@ -11,7 +11,7 @@ using PostitDataAccessLibrary.DataAccess;
 
 namespace PostitDataAccessLibrary.Migrations
 {
-    [DbContext(typeof(UserContext))]
+    [DbContext(typeof(DataContext))]
     [Migration("20231003092453_init")]
     partial class init
     {
